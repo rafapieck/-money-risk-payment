@@ -7,6 +7,8 @@ import {
   questionnaireSchema,
   type QuestionnaireInput,
 } from "@/lib/validation/questionnaire";
+import { ResultScreen, type PaymentRouteView } from "./ResultScreen";
+import type { RiskLevel } from "@/lib/supabase/types";
 
 type FormState = {
   age: string;
@@ -26,6 +28,12 @@ const initialState: FormState = {
   fatigue: null,
   familyHistory: null,
   insuranceStatus: "",
+};
+
+type QuestionnaireResult = {
+  riskLevel: RiskLevel;
+  explanation: string;
+  paymentRoutes: PaymentRouteView[];
 };
 
 const insuranceLabels: Record<QuestionnaireInput["insuranceStatus"], string> = {
@@ -83,7 +91,7 @@ export default function QuestionnairePage() {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [result, setResult] = useState<QuestionnaireResult | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,7 +132,11 @@ export default function QuestionnairePage() {
         return;
       }
 
-      setSuccess(true);
+      setResult({
+        riskLevel: body.riskLevel,
+        explanation: body.explanation,
+        paymentRoutes: body.paymentRoutes,
+      });
       setSubmitting(false);
       router.refresh();
     } catch {
@@ -133,15 +145,13 @@ export default function QuestionnairePage() {
     }
   }
 
-  if (success) {
+  if (result) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-6 text-center">
-        <h1 className="text-xl font-semibold">¡Gracias! Guardamos tus respuestas.</h1>
-        <p className="text-sm text-gray-600">
-          El siguiente paso (tu resultado simulado y una forma de pago) estará
-          disponible muy pronto.
-        </p>
-      </main>
+      <ResultScreen
+        riskLevel={result.riskLevel}
+        explanation={result.explanation}
+        paymentRoutes={result.paymentRoutes}
+      />
     );
   }
 
@@ -244,7 +254,7 @@ export default function QuestionnairePage() {
           disabled={submitting}
           className="w-full rounded-md bg-black px-4 py-3 text-base text-white disabled:opacity-50"
         >
-          {submitting ? "Enviando…" : "Enviar respuestas"}
+          {submitting ? "Generando tu resultado…" : "Enviar respuestas"}
         </button>
       </form>
     </main>

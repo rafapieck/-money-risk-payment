@@ -14,6 +14,8 @@ const riskAssessmentSchema = z.object({
 
 export type RiskAssessment = z.infer<typeof riskAssessmentSchema>;
 
+const client = new Anthropic();
+
 const SYSTEM_PROMPT = `Generas una evaluación de riesgo SIMULADA de tener diabetes tipo 2,
 a partir de las respuestas de un cuestionario corto de síntomas. Esto NO es un
 diagnóstico médico ni sustituye la consulta con un profesional de salud.
@@ -31,8 +33,6 @@ diagnóstico real.`;
 export async function scoreRisk(
   answers: QuestionnaireInput
 ): Promise<RiskAssessment> {
-  const client = new Anthropic();
-
   const response = await client.messages.parse({
     model: "claude-opus-5",
     max_tokens: 2048,

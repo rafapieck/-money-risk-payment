@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { questionnaireSchema } from "@/lib/validation/questionnaire";
 import { scoreRisk } from "@/lib/ai/riskScoring";
+import { selectPaymentRoutes } from "@/lib/paymentRoutes";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -53,7 +54,8 @@ export async function POST(request: Request) {
   let riskAssessment;
   try {
     riskAssessment = await scoreRisk(parsed.data);
-  } catch {
+  } catch (err) {
+    console.error("scoreRisk failed", err);
     return NextResponse.json(
       {
         error:
@@ -64,16 +66,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: riskResult, error: riskInsertError } = await supabase
-    .from("risk_results")
-    .insert({
-      user_id: user.id,
-      questionnaire_id: questionnaire.id,
-      risk_level: riskAssessment.riskLevel,
-      explanation: riskAssessment.explanation,
-    })
-    .select("id")
-    .single();
+  // These two only depend on riskAssessment.riskLevel, not on each other,
+  // so run them concurrently instead of paying for two sequential round trips.
+  const [{ data: riskResult, error: riskInsertError }, paymentRoutes] =
+    await Promise.all([
+      supabase
+        .from("risk_results")
+        .insert({
+          user_id: user.id,
+          questionnaire_id: questionnaire.id,
+          risk_level: riskAssessment.riskLevel,
+          explanation: riskAssessment.explanation,
+        })
+        .select("id")
+        .single(),
+      selectPaymentRoutes(supabase, riskAssessment.riskLevel),
+    ]);
 
   if (riskInsertError || !riskResult) {
     return NextResponse.json(
@@ -85,10 +93,33 @@ export async function POST(request: Request) {
     );
   }
 
+  if (paymentRoutes.length > 0) {
+    const { error: linkError } = await supabase
+      .from("risk_result_routes")
+      .insert(
+        paymentRoutes.map((route) => ({
+          risk_result_id: riskResult.id,
+          payment_route_id: route.id,
+        }))
+      );
+    if (linkError) {
+      console.error("risk_result_routes insert failed", linkError);
+    }
+  }
+
   return NextResponse.json(
     {
       questionnaireId: questionnaire.id,
       riskResultId: riskResult.id,
+      riskLevel: riskAssessment.riskLevel,
+      explanation: riskAssessment.explanation,
+      paymentRoutes: paymentRoutes.map((route) => ({
+        id: route.id,
+        label: route.label,
+        description: route.description,
+        type: route.type,
+        isSimulated: route.is_simulated,
+      })),
     },
     { status: 201 }
   );
