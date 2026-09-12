@@ -26,6 +26,7 @@ export interface Database {
           answers: Record<string, unknown>;
           created_at: string;
         }>;
+        Relationships: [];
       };
       risk_results: {
         Row: {
@@ -52,6 +53,7 @@ export interface Database {
           explanation: string;
           created_at: string;
         }>;
+        Relationships: [];
       };
       payment_routes: {
         Row: {
@@ -63,8 +65,25 @@ export interface Database {
           is_active: boolean;
           created_at: string;
         };
-        Insert: never;
-        Update: never;
+        Insert: Partial<{
+          id: string;
+          label: string;
+          description: string;
+          type: PaymentRouteType;
+          is_simulated: boolean;
+          is_active: boolean;
+          created_at: string;
+        }>;
+        Update: Partial<{
+          id: string;
+          label: string;
+          description: string;
+          type: PaymentRouteType;
+          is_simulated: boolean;
+          is_active: boolean;
+          created_at: string;
+        }>;
+        Relationships: [];
       };
       risk_result_routes: {
         Row: {
@@ -79,8 +98,16 @@ export interface Database {
           payment_route_id: string;
           created_at?: string;
         };
-        Update: never;
+        Update: Partial<{
+          id: string;
+          risk_result_id: string;
+          payment_route_id: string;
+          created_at: string;
+        }>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
   };
 }
