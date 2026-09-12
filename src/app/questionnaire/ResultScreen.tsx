@@ -13,15 +13,15 @@ const riskCopy: Record<
   { label: string; classes: string }
 > = {
   low: {
-    label: "Riesgo bajo (simulado)",
+    label: "Riesgo bajo — cálculo de ejemplo",
     classes: "border-green-300 bg-green-50 text-green-800",
   },
   moderate: {
-    label: "Riesgo moderado (simulado)",
+    label: "Riesgo moderado — cálculo de ejemplo",
     classes: "border-yellow-300 bg-yellow-50 text-yellow-800",
   },
   high: {
-    label: "Riesgo alto (simulado)",
+    label: "Riesgo alto — cálculo de ejemplo",
     classes: "border-red-300 bg-red-50 text-red-800",
   },
 };
@@ -58,11 +58,6 @@ function PaymentRouteCard({ route }: { route: PaymentRouteView }) {
         </span>
       </div>
       <p className="text-sm text-gray-600">{route.description}</p>
-      {route.isSimulated && (
-        <p className="mt-2 text-xs font-medium text-gray-500">
-          Ruta simulada — no es una oferta real.
-        </p>
-      )}
     </div>
   );
 }
@@ -111,9 +106,10 @@ export function ResultScreen({
       )}
 
       <p className="mt-4 text-xs text-gray-500">
-        Este resultado es simulado, calculado con reglas simples a partir de
-        tus respuestas. No es un diagnóstico médico ni asesoría financiera
-        profesional.
+        El riesgo de arriba es un cálculo de ejemplo hecho con reglas
+        simples para esta demostración — no es un diagnóstico médico. Las
+        opciones de pago son sugerencias reales que puedes investigar por
+        tu cuenta; esta app todavía no agenda citas ni procesa pagos.
       </p>
     </main>
   );

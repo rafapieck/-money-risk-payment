@@ -162,10 +162,49 @@ not medical advice" labeling accurate. Updated `docs/PACKET.md`'s
 architecture table row to match (Auth row was already updated in the
 entry above).
 
+## 2026-09-12 — Fixed persona finding #2: differentiate risk vs. payment-route language
+
+User ran their own persona test with Doña Carmen and independently hit
+the exact issue logged as finding #2 on 2026-09-11: repeating "simulado"
+/ "no es una oferta real" on the payment routes, right next to a risk
+score, read as "there is no real help here" — undercutting the whole
+point of the app (pairing a scary result with something actionable).
+
+**Fix, keeping the risk/payment distinction the user asked for:**
+- Risk card label changed from "(simulado)" to "— cálculo de ejemplo"
+  per level; the explanation text already said "esto no es un
+  diagnóstico" for moderate/high, so the not-a-diagnosis warning stays
+  explicit exactly where it matters most.
+- Removed the per-card "Ruta simulada — no es una oferta real." line
+  from `PaymentRouteCard` entirely (`ResultScreen.tsx`) — that line was
+  the specific thing Doña Carmen reacted to.
+- New migration `supabase/migrations/0002_reframe_payment_routes.sql`
+  rewrites the 4 seeded routes' label/description (matched by old label,
+  safe to re-run) from "ejemplo simulado de..." to real, actionable
+  guidance: e.g. "IMSS-Bienestar ofrece consultas y valoraciones para
+  personas sin seguro social. Busca el módulo más cercano..." instead of
+  "ejemplo simulado de los pasos... no es una cita real." The *kind* of
+  help described is real (asking a clinic for an installment plan,
+  IMSS-Bienestar's actual public mandate, organizing a tanda); only the
+  specific numbers/labels are invented for the demo — the row still has
+  `is_simulated = true` internally, just not rendered as a repeated
+  on-screen caveat.
+- One combined, honest disclosure now sits once at the bottom of the
+  result screen instead of being repeated per element: risk is "cálculo
+  de ejemplo... no es un diagnóstico médico"; payment routes are "reales
+  que puedes investigar por tu cuenta; esta app todavía no agenda citas
+  ni procesa pagos" — doesn't claim the app itself is a real financial
+  product, but stops implying the routes themselves are fake.
+- **User action needed:** run `0002_reframe_payment_routes.sql` in the
+  Supabase SQL editor (same place as `0001_init.sql`) — I can't run it
+  myself, the anon key has no write access to `payment_routes` by design
+  (RLS only grants `select` to `authenticated`, writes are
+  migration/service-role only).
+
 ## Tomorrow's first move
-Test the live signup → email confirmation → sign-in → questionnaire →
-rule-based result flow end to end with a real inbox (no AI credentials
-needed anymore — nothing external left to configure for the core flow
-to work). Then decide whether to act on persona findings #2 and #4 (the
-repeated "simulado" wording, and the insurance question's placement)
-before the demo.
+After running `0002_reframe_payment_routes.sql`, redo the live
+signup → confirm → sign-in → questionnaire → result flow and confirm the
+new payment-route wording renders correctly for all 4 seeded routes.
+Then decide whether to act on persona finding #4 (the insurance
+question's placement, read as "they're asking so they can charge me
+differently") before the demo — #2 and #3 are now resolved.
