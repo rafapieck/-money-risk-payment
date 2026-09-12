@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { questionnaireSchema } from "@/lib/validation/questionnaire";
+import { scoreRisk } from "@/lib/ai/riskScoring";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await supabase
+  const { data: questionnaire, error: insertError } = await supabase
     .from("questionnaire_responses")
     .insert({
       user_id: user.id,
@@ -42,12 +43,53 @@ export async function POST(request: Request) {
     .select("id")
     .single();
 
-  if (error || !data) {
+  if (insertError || !questionnaire) {
     return NextResponse.json(
       { error: "No se pudo guardar tu cuestionario. Intenta de nuevo." },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ questionnaireId: data.id }, { status: 201 });
+  let riskAssessment;
+  try {
+    riskAssessment = await scoreRisk(parsed.data);
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Guardamos tus respuestas, pero no pudimos generar tu resultado. Intenta de nuevo en un momento.",
+        questionnaireId: questionnaire.id,
+      },
+      { status: 502 }
+    );
+  }
+
+  const { data: riskResult, error: riskInsertError } = await supabase
+    .from("risk_results")
+    .insert({
+      user_id: user.id,
+      questionnaire_id: questionnaire.id,
+      risk_level: riskAssessment.riskLevel,
+      explanation: riskAssessment.explanation,
+    })
+    .select("id")
+    .single();
+
+  if (riskInsertError || !riskResult) {
+    return NextResponse.json(
+      {
+        error: "No se pudo guardar tu resultado. Intenta de nuevo.",
+        questionnaireId: questionnaire.id,
+      },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(
+    {
+      questionnaireId: questionnaire.id,
+      riskResultId: riskResult.id,
+    },
+    { status: 201 }
+  );
 }
