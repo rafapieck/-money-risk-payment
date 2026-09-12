@@ -256,6 +256,11 @@ export default function QuestionnairePage() {
         >
           {submitting ? "Generando tu resultado…" : "Enviar respuestas"}
         </button>
+        {submitting && (
+          <p className="mt-2 text-center text-sm text-gray-500" role="status">
+            Esto puede tardar unos segundos. No cierres esta pantalla.
+          </p>
+        )}
       </form>
     </main>
   );
