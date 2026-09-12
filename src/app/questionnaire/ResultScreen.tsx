@@ -67,11 +67,19 @@ function PaymentRouteCard({ route }: { route: PaymentRouteView }) {
   );
 }
 
-function PaymentRoutesFallback() {
+function PaymentRoutesFallback({ riskLevel }: { riskLevel: RiskLevel }) {
   return (
     <div className="mb-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-      Estamos buscando una forma de pago para ti. Vuelve a intentarlo en unos
-      minutos.
+      <p>
+        Todavía no encontramos una forma de pago para mostrarte. Vuelve a
+        esta pantalla en unos minutos.
+      </p>
+      {riskLevel === "high" && (
+        <p className="mt-2 font-medium text-gray-700">
+          Mientras tanto, no esperes: acude a tu centro de salud o clínica
+          más cercana para que te revisen.
+        </p>
+      )}
     </div>
   );
 }
@@ -99,7 +107,7 @@ export function ResultScreen({
           <PaymentRouteCard key={route.id} route={route} />
         ))
       ) : (
-        <PaymentRoutesFallback />
+        <PaymentRoutesFallback riskLevel={riskLevel} />
       )}
 
       <p className="mt-4 text-xs text-gray-500">
