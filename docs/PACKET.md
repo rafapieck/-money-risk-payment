@@ -81,7 +81,7 @@ risk score — it's becoming the trusted rail that closes the gap between
 | Frontend             | Next.js + Vercel                                              |
 | Auth                 | Supabase Auth (email + password)                              |
 | Database             | Supabase Postgres, Row Level Security enabled                 |
-| AI                   | Claude API (risk score + explanation)                         |
+| Risk scoring         | Local rule-based simulation (risk score + explanation), no external API |
 | Payment paths        | Simulated table in Supabase, invented and labeled data        |
 | Input validation     | Form validation (length, type) before saving or sending to AI |
 | Secrets              | Vercel environment variables, never in the repo               |

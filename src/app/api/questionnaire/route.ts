@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { questionnaireSchema } from "@/lib/validation/questionnaire";
-import { scoreRisk } from "@/lib/ai/riskScoring";
+import { scoreRisk } from "@/lib/riskScoring";
 import { selectPaymentRoutes } from "@/lib/paymentRoutes";
 
 export async function POST(request: Request) {
@@ -51,20 +51,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let riskAssessment;
-  try {
-    riskAssessment = await scoreRisk(parsed.data);
-  } catch (err) {
-    console.error("scoreRisk failed", err);
-    return NextResponse.json(
-      {
-        error:
-          "Guardamos tus respuestas, pero no pudimos generar tu resultado. Intenta de nuevo en un momento.",
-        questionnaireId: questionnaire.id,
-      },
-      { status: 502 }
-    );
-  }
+  const riskAssessment = scoreRisk(parsed.data);
 
   // These two only depend on riskAssessment.riskLevel, not on each other,
   // so run them concurrently instead of paying for two sequential round trips.

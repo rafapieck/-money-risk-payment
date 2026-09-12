@@ -137,10 +137,35 @@ the next pass.
   pass (distrust from an unexplained Google-account request) — trades it
   for the more familiar email+password friction instead.
 
+## 2026-09-12 — Risk scoring switched to local rules (no Claude API)
+
+Per explicit user request ("no voy a conseguir una clave real de
+Anthropic por ahora"), replaced `src/lib/ai/riskScoring.ts` (Claude API
+call) with `src/lib/riskScoring.ts` — a pure, synchronous, fully local
+function. No network call, so nothing to catch: `POST
+/api/questionnaire` calls it directly instead of through the `try/catch`
+the API-call version needed, removing a dead failure path.
+
+**Rules:** one point each for frequentThirst, blurryVision,
+frequentUrination, fatigue, familyHistory, and age >= 45 (max 6). 0-1 =
+low, 2-3 = moderate, 4-6 = high. The explanation is a template that lists
+back whichever symptoms/factors were actually present, so it still reads
+as personalized rather than generic. Verified low/moderate/high all
+produce sensible output across a few hand-picked answer combinations.
+
+Removed the now-unused `@anthropic-ai/sdk` dependency and
+`ANTHROPIC_API_KEY` from `.env.local` / `.env.local.example`. Fixed the
+result screen's disclaimer, which previously said "generado por
+inteligencia artificial" — no longer true — to say the result is
+simulated via simple rules instead, keeping the required "simulado /
+not medical advice" labeling accurate. Updated `docs/PACKET.md`'s
+architecture table row to match (Auth row was already updated in the
+entry above).
+
 ## Tomorrow's first move
 Test the live signup → email confirmation → sign-in → questionnaire →
-AI-scored result flow end to end with a real inbox. Add a real
-`ANTHROPIC_API_KEY` to `.env.local` if not done yet — `scoreRisk()` is
-still only type-checked, not live-tested. Then decide whether to act on
-persona findings #2 and #4 (the repeated "simulado" wording, and the
-insurance question's placement) before the demo.
+rule-based result flow end to end with a real inbox (no AI credentials
+needed anymore — nothing external left to configure for the core flow
+to work). Then decide whether to act on persona findings #2 and #4 (the
+repeated "simulado" wording, and the insurance question's placement)
+before the demo.

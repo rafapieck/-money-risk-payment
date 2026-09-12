@@ -111,8 +111,8 @@ export function ResultScreen({
       )}
 
       <p className="mt-4 text-xs text-gray-500">
-        Este resultado fue generado por inteligencia artificial de forma
-        simulada. No es un diagnóstico médico ni asesoría financiera
+        Este resultado es simulado, calculado con reglas simples a partir de
+        tus respuestas. No es un diagnóstico médico ni asesoría financiera
         profesional.
       </p>
     </main>
