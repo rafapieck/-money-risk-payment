@@ -201,10 +201,42 @@ point of the app (pairing a scary result with something actionable).
   (RLS only grants `select` to `authenticated`, writes are
   migration/service-role only).
 
+## 2026-09-12 — Manual persona test on the real screens (Doña Carmen, round 2)
+
+User ran their own manual persona test with Doña Carmen directly on the
+three real screens (login, cuestionario, resultado) — not the
+dev-preview screenshots used in the 2026-09-11 pass. Three points of
+confusion surfaced:
+
+1. **(pending)** "Resultado simulado" (`src/app/login/page.tsx:98`,
+   `src/app/page.tsx:29`) read as untrustworthy — she didn't understand
+   what "simulado" meant here, and it made her doubt the app before
+   she'd even started the questionnaire. Needs plain-language rewording
+   rather than a relabel, since the word itself is the problem, not its
+   placement.
+2. **(pending — root cause unconfirmed)** The insurance-status question
+   left her stuck with no way to answer, and she abandoned the flow.
+   Code check: `insuranceStatusValues` already includes `"none"` ("No
+   tengo ningún seguro médico", `src/app/questionnaire/page.tsx:42`) and
+   has since the question was first built (commit `9334e47`) — so the
+   option itself exists in the code. Per the user, something else about
+   the rendered UI/interaction was the actual blocker. Needs a fresh
+   look at the live screen (not just the code) next pass to find what
+   she actually hit.
+3. **(fixed)** Seeing "simulado" repeated across the payment routes made
+   her think no real help existed at all, compounding the risk result
+   with no way out — the same issue logged as persona finding #2 on
+   2026-09-11 and fixed the same day via
+   `supabase/migrations/0002_reframe_payment_routes.sql` (see entry
+   above). This test independently reproduced it as *the* worst point,
+   confirming the fix targeted the right issue.
+
+**Next iteration candidates:** #1 and #2 above, plus persona finding #4
+from 2026-09-11 (the insurance question's placement, read as "they're
+asking so they can charge me differently") — all still open.
+
 ## Tomorrow's first move
-After running `0002_reframe_payment_routes.sql`, redo the live
-signup → confirm → sign-in → questionnaire → result flow and confirm the
-new payment-route wording renders correctly for all 4 seeded routes.
-Then decide whether to act on persona finding #4 (the insurance
-question's placement, read as "they're asking so they can charge me
-differently") before the demo — #2 and #3 are now resolved.
+Investigate #2 above first (live screen, not code) since it's the one
+with an unconfirmed root cause and it fully blocks the flow for anyone
+without insurance — likely her single most common real-world case. Then
+take a plain-language pass at "simulado" (#1) before the demo.
