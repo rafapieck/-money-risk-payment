@@ -111,10 +111,36 @@ the next pass.
   in the build environment, so `scoreRisk()` is type-checked but not yet
   live-tested end to end.
 
+## 2026-09-12 — Real Supabase project + switch to email/password auth
+
+- User provided the real Supabase project URL + anon key; added to
+  `.env.local` (gitignored, confirmed not tracked).
+- Verified against the live project via REST: `payment_routes` exists and
+  returns `[]` to an anon request (RLS correctly blocking the
+  non-authenticated role — confirms the migration was already run, not
+  that the table is missing). Checked `/auth/v1/settings`: email/password
+  is enabled, signups are allowed, and `mailer_autoconfirm: false` — new
+  accounts must click a confirmation-email link before they can sign in.
+- **Switched auth from Google OAuth to Supabase email + password**, per
+  explicit user request ("no necesito configurar nada en Google Cloud").
+  `src/app/login/page.tsx` now has a single form with a sign-in/sign-up
+  toggle: `signInWithPassword` for existing users,
+  `signUp({ emailRedirectTo: .../auth/callback })` for new ones. Since
+  this project requires email confirmation, a fresh sign-up shows "revisa
+  tu correo" instead of redirecting — `data.session` is null until the
+  user clicks the confirmation link, which lands on `/auth/callback`
+  (unchanged — it already generically exchanges any `code` param for a
+  session, so it didn't need to know or care which auth method produced
+  it). `docs/PACKET.md`'s Auth row and security-floor checklist item
+  updated to match.
+- This also happens to resolve persona finding #3 from the 2026-09-11
+  pass (distrust from an unexplained Google-account request) — trades it
+  for the more familiar email+password friction instead.
+
 ## Tomorrow's first move
-Once Supabase + Anthropic credentials are in `.env.local`: run `npm run
-dev`, sign in with Google for real, and redo the mechanical pass against
-the live backend (empty submission rejected, valid submission produces a
-combined risk + payment result, second Google account can't see the
-first account's rows). Then decide whether to act on persona findings
-#2-4 above before the demo.
+Test the live signup → email confirmation → sign-in → questionnaire →
+AI-scored result flow end to end with a real inbox. Add a real
+`ANTHROPIC_API_KEY` to `.env.local` if not done yet — `scoreRisk()` is
+still only type-checked, not live-tested. Then decide whether to act on
+persona findings #2 and #4 (the repeated "simulado" wording, and the
+insurance question's placement) before the demo.

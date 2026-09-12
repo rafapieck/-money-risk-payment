@@ -79,7 +79,7 @@ risk score — it's becoming the trusted rail that closes the gap between
 | Layer               | Tool                                                        |
 |----------------------|--------------------------------------------------------------|
 | Frontend             | Next.js + Vercel                                              |
-| Auth                 | Supabase Auth ("Sign in with Google")                         |
+| Auth                 | Supabase Auth (email + password)                              |
 | Database             | Supabase Postgres, Row Level Security enabled                 |
 | AI                   | Claude API (risk score + explanation)                         |
 | Payment paths        | Simulated table in Supabase, invented and labeled data        |
@@ -100,8 +100,8 @@ risk score — it's becoming the trusted rail that closes the gap between
 
 ## Security floor (checklist)
 - [ ] No secrets in code or in the repo (Vercel env vars only)
-- [ ] Auth via Supabase (Google) because questionnaire answers are personal
-      data
+- [ ] Auth via Supabase (email + password) because questionnaire answers
+      are personal data
 - [ ] Row Level Security enabled on every table holding user data
 - [ ] Every form validates length and type before touching the DB or the
       AI prompt
